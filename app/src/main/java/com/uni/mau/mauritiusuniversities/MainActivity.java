@@ -1,14 +1,13 @@
 package com.uni.mau.mauritiusuniversities;
 
-import android.app.SearchManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.SearchRecentSuggestions;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -29,7 +28,9 @@ import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -180,7 +181,15 @@ public class MainActivity extends BaseActivity
 
         chatBarView = (ChatBarView) findViewById(R.id.chatbar);
 
+        FrameLayout frameLayout = (FrameLayout) chatBarView.getChildAt(0);
+        LinearLayout linearLayout = (LinearLayout) frameLayout.getChildAt(0);
+        LinearLayout linearLayout2 = (LinearLayout) linearLayout.getChildAt(0);
+        TextView textView = (TextView) linearLayout2.getChildAt(0);
+
+        textView.setTextColor(Color.BLACK);
+
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
+
 
         // New child entries
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
@@ -325,39 +334,24 @@ public class MainActivity extends BaseActivity
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
 
-        handleIntent(getIntent());
-
-
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        setIntent(intent);
-        handleIntent(intent);
-    }
-
-    private void handleIntent(Intent intent) {
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            String query = intent.getStringExtra(SearchManager.QUERY);
-            doMySearch(query);
-        }
-    }
-
-    private void doMySearch(String query) {
-        SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
-                MySuggestionProvider.AUTHORITY, MySuggestionProvider.MODE);
-        suggestions.saveRecentQuery(query, null);
-        chatRel.setVisibility(View.GONE);
-        myWebView.setVisibility(View.VISIBLE);
-        myWebView.loadUrl("https://www.google.com/search?q=" + query);
-        myWebView.setWebViewClient(new WebViewClient() {
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                return true;
+        //handleIntent(getIntent());
+        if (getIntent() != null) {
+            String query = getIntent().getStringExtra("query");
+            if (query != null) {
+                Log.e("query", query);
+                chatRel.setVisibility(View.GONE);
+                myWebView.setVisibility(View.VISIBLE);
+                myWebView.loadUrl("https://www.google.com/search?q=" + query);
+                myWebView.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                        view.loadUrl(url);
+                        return true;
+                    }
+                });
             }
-        });
+        }
+
     }
 
     @Override
@@ -415,7 +409,7 @@ public class MainActivity extends BaseActivity
         return true;
     }
 
-    //Called from the search config file should be used instead of the searchView instantiation On the onCreateOptionsMenu
+    /*Called from the search config file should be used instead of the searchView instantiation On the onCreateOptionsMenu
     @Override
     public boolean onSearchRequested() {
         Bundle appData = new Bundle();
@@ -423,7 +417,7 @@ public class MainActivity extends BaseActivity
         startSearch(null, false, appData, false);
         return true;
     }
-
+    */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -431,10 +425,13 @@ public class MainActivity extends BaseActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.app_bar_search
-                ) {
-            onSearchRequested();
-            return true;
+        Log.e("id clicked", String.valueOf(id));
+        if (id == R.id.app_bar_search) {
+            Log.e("search clicked", String.valueOf(id));
+            boolean searchRes = onSearchRequested();
+            Log.e("onSearchRequested", String.valueOf(searchRes));
+            return searchRes;
+            //return true;
         }
         if (id == R.id.invite_menu) {
             sendInvitation();
